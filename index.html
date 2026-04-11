@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rozbiór Logiczny - Edycja Zeszytowa</title>
+    <link rel="icon" type="image/x-icon" href="https://img.freepik.com/darmowe-psd/blyszczacy-czerwony-symbol-serca-3d-renderowanie-blyszczacych-serc_191095-78483.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --paper-bg: #fffef0;
+            --ink-blue: #1e3a8a;
+            --pencil-gray: #475569;
+        }
+
+        body {
+            background-color: #e5e7eb;
+            background-image: url('https://www.transparenttextures.com/patterns/notebook.png'), 
+                              linear-gradient(to right, #fca5a5 1px, transparent 1px),
+                              linear-gradient(var(--paper-bg) 97%, #e2e8f0 3%);
+            background-size: 100% 100%, 100px 100%, 100% 30px;
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .canvas-area { 
+            min-height: 550px; 
+            position: relative; 
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.02);
+        }
+
+        .node { 
+            position: absolute; 
+            z-index: 10; 
+            user-select: none;
+            width: 150px;
+            transform: rotate(-1deg);
+        }
+
+        .node-content {
+            background: white;
+            border: 1px solid #d1d5db;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            padding: 10px;
+            border-radius: 2px;
+        }
+
+        .node:nth-child(even) { transform: rotate(1.5deg); }
+        .node:hover { transform: scale(1.05) rotate(0deg); z-index: 50; }
+
+        .drop-zone { 
+            border: 1px dashed #94a3b8; 
+            min-height: 35px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 0.75rem; 
+            color: #64748b; 
+            margin-top: 8px;
+            background: #f8fafc;
+        }
+
+        .connector-svg { 
+            pointer-events: none; 
+            position: absolute; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            z-index: 5; 
+        }
+
+        #full-sentence-display {
+            background: #fff;
+            border-left: 8px solid #3b82f6;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.05);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .word-pool {
+            min-height: 120px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 25px;
+            background: #e2e8f0;
+            border-top: 3px solid #cbd5e1;
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.05);
+        }
+
+        .pool-node {
+            cursor: grab;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .label-pill {
+            transition: all 0.2s;
+            border-bottom: 3px solid rgba(0,0,0,0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .sort-box {
+            min-height: 250px;
+            border: 2px dashed #94a3b8;
+            background: rgba(255,255,255,0.5);
+            border-radius: 4px;
+        }
+
+        .pair-card {
+            background: white;
+            border: 1px solid #d1d5db;
+            font-weight: 700;
+            transform: rotate(-0.5deg);
+        }
+
+        button {
+            border-radius: 4px !important;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Styl Pop-upu końcowego */
+        #end-popup {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(30, 58, 138, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background: var(--paper-bg);
+            border: 6px solid #1e3a8a;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 20px 20px 0px rgba(0,0,0,0.1);
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-6 flex justify-between items-end">
+            <div>
+                <h1 class="text-4xl font-black text-blue-900 tracking-tighter">ZESZYT DO GRAMATYKI</h1>
+                <p id="instruction" class="text-blue-700 font-bold text-lg">Krok 1: Przeciągnij wyrazy na stronę i połącz je...</p>
+            </div>
+            <div class="bg-white px-6 py-2 border-2 border-blue-900 shadow-[4px_4px_0px_#1e3a8a] text-sm font-black">
+                BŁĘDY: <span id="error-count" class="text-red-600 text-xl">0</span>
+            </div>
+        </header>
+
+        <div id="full-sentence-display" class="mb-6 p-6 rounded-sm text-blue-900">
+            Wybieranie zdania...
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-sm shadow-2xl border border-slate-300 overflow-hidden relative rounded-sm">
+            <div id="labels-drawer" class="hidden bg-blue-900 p-4 flex flex-wrap gap-3 justify-center">
+                <div class="label-pill bg-blue-500 text-white px-6 py-2 text-xs font-bold cursor-pointer" draggable="true">Podmiot</div>
+                <div class="label-pill bg-red-500 text-white px-6 py-2 text-xs font-bold cursor-pointer" draggable="true">Orzeczenie</div>
+                <div class="label-pill bg-amber-500 text-white px-6 py-2 text-xs font-bold cursor-pointer" draggable="true">Przydawka</div>
+                <div class="label-pill bg-emerald-500 text-white px-6 py-2 text-xs font-bold cursor-pointer" draggable="true">Dopełnienie</div>
+                <div class="label-pill bg-purple-500 text-white px-6 py-2 text-xs font-bold cursor-pointer" draggable="true">Okolicznik</div>
+            </div>
+
+            <div id="game-canvas" class="canvas-area">
+                <svg id="connections-svg" class="connector-svg">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orientation="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#1e3a8a" />
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <div id="sorting-stage" class="hidden p-8 bg-white/50">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div id="pairs-to-sort">
+                        <h4 class="text-xl font-bold text-slate-500 mb-4">Relacje:</h4>
+                    </div>
+                    <div id="main-box" class="sort-box p-4" ondragover="event.preventDefault()" ondrop="handleSortDrop(event, 'main')">
+                        <h4 class="text-center font-black text-blue-700 uppercase border-b-2 border-blue-200 mb-4">Związek Główny</h4>
+                    </div>
+                    <div id="side-box" class="sort-box p-4" ondragover="event.preventDefault()" ondrop="handleSortDrop(event, 'side')">
+                        <h4 class="text-center font-black text-emerald-700 uppercase border-b-2 border-emerald-200 mb-4">Związki Poboczne</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div id="word-pool" class="word-pool" ondragover="event.preventDefault()" ondrop="handleDropToPool(event)"></div>
+        </div>
+
+        <div class="mt-8 flex justify-between">
+            <button id="undo-btn" class="bg-white border-2 border-slate-800 px-8 py-3 font-bold text-xs hover:bg-slate-50 transition shadow-[4px_4px_0px_#000]">COFNIJ</button>
+            <button id="next-btn" class="hidden bg-blue-700 text-white px-10 py-4 font-black text-sm hover:bg-blue-800 shadow-[4px_4px_0px_#1e3a8a] transition uppercase">Dalej -></button>
+        </div>
+    </div>
+
+    <div id="end-popup">
+        <div class="popup-content">
+            <h2 id="end-title" class="text-3xl font-black text-blue-900 mb-4">GRATULACJE!</h2>
+            <img id="end-gif" src="" alt="Success" class="w-full h-auto mb-6 border-2 border-blue-200">
+            <button onclick="location.reload()" class="w-full bg-emerald-600 text-white py-4 font-black hover:bg-emerald-700 shadow-[4px_4px_0px_#064e3b] transition">KONTYNUUJ</button>
+        </div>
+    </div>
+
+    <script>
+        const sentences = [
+            { text: "Wczoraj kuzynka Agnieszki złamała prawą nogę.", words: [{t: "Wczoraj", r: "okolicznik", p: 3}, {t: "kuzynka", r: "podmiot", p: 3}, {t: "Agnieszki", r: "przydawka", p: 1}, {t: "złamała", r: "orzeczenie", p: null}, {t: "prawą", r: "przydawka", p: 5}, {t: "nogę", r: "dopełnienie", p: 3}]},
+            { text: "Duży pies głośno szczeka.", words: [{t: "Duży", r: "przydawka", p: 1}, {t: "pies", r: "podmiot", p: 3}, {t: "głośno", r: "okolicznik", p: 3}, {t: "szczeka", r: "orzeczenie", p: null}]},
+            { text: "Rankiem tajemniczy statek piratów zniknął we mgle.", words: [{t: "Rankiem", r: "okolicznik", p: 4}, {t: "tajemniczy", r: "przydawka", p: 2}, {t: "statek", r: "podmiot", p: 4}, {t: "piratów", r: "przydawka", p: 2}, {t: "zniknął", r: "orzeczenie", p: null}, {t: "we mgle", r: "okolicznik", p: 4}]},
+            { text: "Mali chłopcy wytrwale ćwiczą rzuty piłką na boisku.", words: [{t: "Mali", r: "przydawka", p: 1}, {t: "chłopcy", r: "podmiot", p: 3}, {t: "wytrwale", r: "okolicznik", p: 3}, {t: "ćwiczą", r: "orzeczenie", p: null}, {t: "rzuty", r: "dopełnienie", p: 3}, {t: "piłką", r: "przydawka", p: 4}, {t: "na boisku", r: "okolicznik", p: 3}]},
+            { text: "Podejrzany mężczyzna pogroził mi palcem.", words: [{t: "Podejrzany", r: "przydawka", p: 1}, {t: "mężczyzna", r: "podmiot", p: 2}, {t: "pogroził", r: "orzeczenie", p: null}, {t: "mi", r: "dopełnienie", p: 2}, {t: "palcem", r: "dopełnienie", p: 2}]},
+            { text: "Taki wynik meczu bardzo nas zaskoczył.", words: [{t: "Taki", r: "przydawka", p: 1}, {t: "wynik", r: "podmiot", p: 5}, {t: "meczu", r: "przydawka", p: 1}, {t: "bardzo", r: "okolicznik", p: 5}, {t: "nas", r: "dopełnienie", p: 5}, {t: "zaskoczył", r: "orzeczenie", p: null}]},
+            { text: "Brat mojego kolegi kupił wczoraj nowy samochód.", words: [{t: "Brat", r: "podmiot", p: 3}, {t: "mojego", r: "przydawka", p: 2}, {t: "kolegi", r: "przydawka", p: 0}, {t: "kupił", r: "orzeczenie", p: null}, {t: "wczoraj", r: "okolicznik", p: 3}, {t: "nowy", r: "przydawka", p: 6}, {t: "samochód", r: "dopełnienie", p: 3}]},
+            { text: "Moja ulubiona klasa wytrwale uczy się gramatyki.", words: [{t: "Moja", r: "przydawka", p: 2}, {t: "ulubiona", r: "przydawka", p: 2}, {t: "klasa", r: "podmiot", p: 4}, {t: "wytrwale", r: "okolicznik", p: 4}, {t: "uczy się", r: "orzeczenie", p: null}, {t: "gramatyki", r: "dopełnienie", p: 4}]},
+            { text: "W południe nad łąką latały pracowite pszczoły.", words: [{t: "W południe", r: "okolicznik", p: 2}, {t: "nad łąką", r: "okolicznik", p: 2}, {t: "latały", r: "orzeczenie", p: null}, {t: "pracowite", r: "przydawka", p: 4}, {t: "pszczoły", r: "podmiot", p: 2}]},
+            { text: "Tajemnicza dziewczyna rzuciła szybkie spojrzenie.", words: [{t: "Tajemnicza", r: "przydawka", p: 1}, {t: "dziewczyna", r: "podmiot", p: 2}, {t: "rzuciła", r: "orzeczenie", p: null}, {t: "szybkie", r: "przydawka", p: 4}, {t: "spojrzenie", r: "dopełnienie", p: 2}]},
+            { text: "Małe dziecko nagle zapadło w głęboki sen.", words: [{t: "Małe", r: "przydawka", p: 1}, {t: "dziecko", r: "podmiot", p: 3}, {t: "nagle", r: "okolicznik", p: 3}, {t: "zapadło", r: "orzeczenie", p: null}, {t: "w sen", r: "dopełnienie", p: 3}, {t: "głęboki", r: "przydawka", p: 4}]}
+        ];
+
+        let curSent, connections = [], stage = 1, errors = 0, history = [], sorted = 0;
+
+        function init() {
+            let hist = JSON.parse(localStorage.getItem('recentSentences') || "[]");
+            let available = sentences.filter(s => !hist.includes(s.text));
+            if (available.length === 0) { available = sentences; hist = []; }
+            curSent = available[Math.floor(Math.random() * available.length)];
+            hist.push(curSent.text);
+            if (hist.length > 10) hist.shift();
+            localStorage.setItem('recentSentences', JSON.stringify(hist));
+
+            document.getElementById('full-sentence-display').innerText = curSent.text;
+            const pool = document.getElementById('word-pool');
+            curSent.words.forEach((w, i) => {
+                const d = document.createElement('div');
+                d.className = "pool-node"; d.innerText = w.t; d.draggable = true; d.id = `pool-${i}`;
+                d.ondragstart = (e) => e.dataTransfer.setData('text', `new:${i}`);
+                pool.appendChild(d);
+            });
+            document.getElementById('game-canvas').ondragover = (e) => e.preventDefault();
+            document.getElementById('game-canvas').ondrop = handleCanvasDrop;
+            document.getElementById('undo-btn').onclick = undo;
+        }
+
+        function handleCanvasDrop(e) {
+            const data = e.dataTransfer.getData('text');
+            if(!data.startsWith('new:')) return;
+            const idx = data.split(':')[1];
+            const rect = e.currentTarget.getBoundingClientRect();
+            createNode(idx, e.clientX - rect.left - 75, e.clientY - rect.top - 25);
+            document.getElementById(`pool-${idx}`).remove();
+        }
+
+        function handleDropToPool(e) {
+            const data = e.dataTransfer.getData('text');
+            if(!data.startsWith('canvas:')) return;
+            const idx = data.split(':')[1];
+            connections = connections.filter(c => c.c != idx && c.p != idx);
+            document.getElementById(`node-${idx}`).remove();
+            draw();
+            const d = document.createElement('div');
+            d.className = "pool-node"; d.innerText = curSent.words[idx].t; d.draggable = true; d.id = `pool-${idx}`;
+            d.ondragstart = (e) => e.dataTransfer.setData('text', `new:${idx}`);
+            e.currentTarget.appendChild(d);
+        }
+
+        function createNode(idx, x, y) {
+            const div = document.createElement('div');
+            div.id = `node-${idx}`; div.className = "node"; div.style.left = x+'px'; div.style.top = y+'px';
+            div.innerHTML = `<div class="node-content">
+                <div class="text-blue-900 font-bold text-center text-xl">${curSent.words[idx].t}</div>
+                <div id="dz-${idx}" class="drop-zone hidden">ROLA</div>
+                <div id="rl-${idx}" class="mt-1 text-[11px] font-black uppercase text-blue-600 hidden text-center"></div>
+            </div>`;
+
+            let moving = false, off = {x:0,y:0};
+            div.onmousedown = (e) => { if(e.target.closest('.drop-zone')) return; moving = true; const r = div.getBoundingClientRect(); off = {x: e.clientX-r.left, y:e.clientY-r.top}; div.style.zIndex=100; };
+            window.onmousemove = (e) => { if(!moving) return; const cr = document.getElementById('game-canvas').getBoundingClientRect(); div.style.left = (e.clientX-cr.left-off.x)+'px'; div.style.top = (e.clientY-cr.top-off.y)+'px'; draw(); };
+            window.onmouseup = () => { moving = false; div.style.zIndex=10; };
+            div.draggable = true;
+            div.ondragstart = (e) => { 
+                if(stage === 1) e.dataTransfer.setData('text', `link:${idx}`); 
+                else e.dataTransfer.setData('text', `canvas:${idx}`);
+            };
+            div.ondrop = (e) => {
+                e.preventDefault();
+                const data = e.dataTransfer.getData('text');
+                if(stage === 1 && data.startsWith('link:')) {
+                    const sIdx = parseInt(data.split(':')[1]);
+                    if(sIdx !== parseInt(idx)) validateLink(sIdx, parseInt(idx));
+                } else if(stage === 2 && data === 'role') {
+                    handleRole(idx, e.dataTransfer.getData('val'));
+                }
+            };
+            document.getElementById('game-canvas').appendChild(div);
+        }
+
+        function validateLink(c, p) {
+            const cw = curSent.words[c], pw = curSent.words[p];
+            const isMain = (cw.r === 'podmiot' && pw.r === 'orzeczenie') || (cw.r === 'orzeczenie' && pw.r === 'podmiot');
+            if(isMain || cw.p === p) {
+                if(!connections.find(conn => conn.c === c && conn.p === p)) {
+                    history.push(JSON.stringify(connections));
+                    connections.push({c, p, main: isMain});
+                    draw();
+                    checkStage1();
+                }
+            } else { err(); }
+        }
+
+        function draw() {
+            const svg = document.getElementById('connections-svg');
+            svg.querySelectorAll('line').forEach(l => l.remove());
+            const cr = document.getElementById('game-canvas').getBoundingClientRect();
+            connections.forEach(cn => {
+                const n1 = document.getElementById(`node-${cn.c}`), n2 = document.getElementById(`node-${cn.p}`);
+                if(!n1 || !n2) return;
+                const r1 = n1.getBoundingClientRect(), r2 = n2.getBoundingClientRect();
+                const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                l.setAttribute('x1', r1.left+r1.width/2-cr.left); l.setAttribute('y1', r1.top+r1.height/2-cr.top);
+                l.setAttribute('x2', r2.left+r2.width/2-cr.left); l.setAttribute('y2', r2.top+r2.height/2-cr.top);
+                l.setAttribute('stroke', '#1e3a8a'); l.setAttribute('stroke-width', '2');
+                if(cn.main) { l.setAttribute('marker-start', 'url(#arrowhead)'); l.setAttribute('marker-end', 'url(#arrowhead)'); }
+                else { l.setAttribute('marker-end', 'url(#arrowhead)'); l.setAttribute('stroke-dasharray', '4,4'); }
+                svg.appendChild(l);
+            });
+        }
+
+        function checkStage1() {
+            const connected = new Set();
+            connections.forEach(c => { connected.add(c.c); if(c.main) connected.add(c.p); });
+            if(document.querySelectorAll('.node').length === curSent.words.length && curSent.words.every((w, i) => w.p === null || connected.has(i))) {
+                const b = document.getElementById('next-btn'); b.classList.remove('hidden'); b.onclick = s2;
+            }
+        }
+
+        function s2() {
+            stage = 2; document.getElementById('instruction').innerText = "Krok 2: Nazwij części zdania (przeciągnij kolorowe etykiety na wyrazy).";
+            document.getElementById('labels-drawer').classList.remove('hidden');
+            document.querySelectorAll('.drop-zone').forEach(d => d.classList.remove('hidden'));
+            document.getElementById('next-btn').classList.add('hidden');
+            document.querySelectorAll('.label-pill').forEach(l => {
+                l.ondragstart = (e) => { e.dataTransfer.setData('text', 'role'); e.dataTransfer.setData('val', l.innerText); };
+            });
+        }
+
+        function handleRole(idx, val) {
+            if(curSent.words[idx].r.toLowerCase() === val.toLowerCase()) {
+                document.getElementById(`rl-${idx}`).innerText = val;
+                document.getElementById(`rl-${idx}`).classList.remove('hidden');
+                document.getElementById(`dz-${idx}`).remove();
+                if(document.querySelectorAll('.drop-zone').length === 0) {
+                    const b = document.getElementById('next-btn'); b.classList.remove('hidden'); b.innerText = "Sortowanie związków"; b.onclick = s3;
+                }
+            } else { err(); }
+        }
+
+        function s3() {
+            stage = 3; document.getElementById('instruction').innerText = "Krok 3: Podziel związki na główne i poboczne.";
+            document.getElementById('game-canvas').classList.add('hidden');
+            document.getElementById('labels-drawer').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('sorting-stage').classList.remove('hidden');
+            const cont = document.getElementById('pairs-to-sort');
+            connections.forEach((cn, i) => {
+                const d = document.createElement('div'); d.className = "pair-card p-3 mb-2 rounded shadow-sm"; d.id = `pair-${i}`; d.draggable = true;
+                d.innerText = `${curSent.words[cn.c].t} — ${curSent.words[cn.p].t}`;
+                d.dataset.main = cn.main;
+                d.ondragstart = (e) => e.dataTransfer.setData('text', d.id);
+                cont.appendChild(d);
+            });
+        }
+
+        function handleSortDrop(e, type) {
+            const id = e.dataTransfer.getData('text'), el = document.getElementById(id), isM = el.dataset.main === "true";
+            if((type === 'main' && isM) || (type === 'side' && !isM)) {
+                e.currentTarget.appendChild(el); el.draggable = false; sorted++;
+                if(sorted === connections.length) end();
+            } else { err(); }
+        }
+
+        function end() {
+            const gifs = [
+                "https://media.tenor.com/-WsBtmSFOkAAAAAi/great-work-good-work.gif",
+                "https://media1.tenor.com/m/lQcUV4tFXqgAAAAC/achievement-success.gif",
+                "https://media1.tenor.com/m/Q97UxcFep40AAAAd/great-job-yes.gif",
+                "https://media.tenor.com/dOv8z_0THu8AAAAi/pochacco-thumbs-up.gif",
+                "https://media.tenor.com/ENaunu5infgAAAAi/cheering-well-done.gif",
+                "https://media.tenor.com/AQj2l2q3VcYAAAAj/10-10-out-of-10.gif",
+                "https://media.tenor.com/hX2VlxERAGUAAAAj/well-done-blue.gif"
+            ];
+            const titles = ["GRATULACJE!", "DOBRA ROBOTA!", "WSPANIALE!", "MISTRZOSTWO!"];
+            
+            document.getElementById('end-title').innerText = titles[Math.floor(Math.random() * titles.length)];
+            document.getElementById('end-gif').src = gifs[Math.floor(Math.random() * gifs.length)];
+            document.getElementById('end-popup').style.display = 'flex';
+        }
+
+        function undo() { if(history.length > 0) { connections = JSON.parse(history.pop()); draw(); } }
+        function err() { errors++; document.getElementById('error-count').innerText = errors; document.body.style.backgroundColor = '#fee2e2'; setTimeout(() => document.body.style.backgroundColor = '', 200); }
+
+        init();
+    </script>
+</body>
+</html>
