@@ -25,7 +25,6 @@
             touch-action: manipulation;
         }
 
-        /* Poprawka mobilna: blokada przewijania przy przeciąganiu */
         .node, .pool-node, .label-pill, .pair-card {
             touch-action: none;
             user-select: none;
@@ -55,12 +54,11 @@
             transition: transform 0.2s;
             padding: 10px;
             border-radius: 2px;
-            pointer-events: none; /* Pozwala wykryć rodzica .node podczas upuszczania */
+            pointer-events: none;
         }
 
         .node:nth-child(even) { transform: rotate(1.5deg); }
         
-        /* Wyłączamy hover na dotyku, żeby nie "kleił" się do palca */
         @media (hover: hover) {
             .node:hover { transform: scale(1.05) rotate(0deg); z-index: 50; }
         }
@@ -160,7 +158,6 @@
             max-width: 90%;
         }
 
-        /* Widmo elementu podczas przeciągania na telefonie */
         .drag-ghost {
             position: fixed;
             pointer-events: none;
@@ -275,23 +272,13 @@
             document.getElementById('undo-btn').onclick = undo;
         }
 
-        // UNIWERSALNY SYSTEM OBSŁUGI DOTYKU I MYSZY
         function setupUniversalDrag(el, type, id) {
             el.onpointerdown = (e) => {
                 if (stage === 3 && type === 'canvas') return;
                 el.setPointerCapture(e.pointerId);
-                
                 const rect = el.getBoundingClientRect();
-                activeDrag = {
-                    el: el,
-                    type: type,
-                    id: id,
-                    offsetX: e.clientX - rect.left,
-                    offsetY: e.clientY - rect.top,
-                    isMoving: false
-                };
+                activeDrag = { el, type, id, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top };
 
-                // Tworzenie "ducha" dla elementów z pool, labels i pairs
                 if (['pool', 'label', 'pair'].includes(type)) {
                     const ghost = el.cloneNode(true);
                     ghost.classList.add('drag-ghost');
@@ -301,14 +288,11 @@
                     document.body.appendChild(ghost);
                     activeDrag.ghost = ghost;
                 }
-                
                 if (type === 'canvas') el.style.zIndex = 100;
             };
 
             el.onpointermove = (e) => {
                 if (!activeDrag || activeDrag.el !== el) return;
-                activeDrag.isMoving = true;
-
                 if (activeDrag.ghost) {
                     activeDrag.ghost.style.left = (e.clientX - activeDrag.offsetX) + 'px';
                     activeDrag.ghost.style.top = (e.clientY - activeDrag.offsetY) + 'px';
@@ -323,16 +307,18 @@
 
             el.onpointerup = (e) => {
                 if (!activeDrag || activeDrag.el !== el) return;
-                const ad = activeDrag;
-                activeDrag = null;
+                const ad = activeDrag; activeDrag = null;
                 el.releasePointerCapture(e.pointerId);
 
                 if (ad.ghost) ad.ghost.remove();
                 if (ad.type === 'canvas') el.style.zIndex = 10;
 
+                // FIX: Ukrywamy tymczasowo przeciągany element, aby elementFromPoint znalazł cel pod spodem
+                const originalPointerEvents = el.style.pointerEvents;
+                el.style.pointerEvents = 'none';
                 const targetEl = document.elementFromPoint(e.clientX, e.clientY);
-                
-                // LOGIKA UPUSZCZANIA (ZASTĘPUJE ondrop)
+                el.style.pointerEvents = originalPointerEvents;
+
                 if (ad.type === 'pool') {
                     const canvas = document.getElementById('game-canvas');
                     if (targetEl && (targetEl === canvas || canvas.contains(targetEl))) {
@@ -349,9 +335,7 @@
                 }
                 else if (ad.type === 'label') {
                     const dropNode = targetEl?.closest('.node');
-                    if (dropNode) {
-                        handleRole(dropNode.id.split('-')[1], ad.el.innerText);
-                    }
+                    if (dropNode) handleRole(dropNode.id.split('-')[1], ad.el.innerText);
                 }
                 else if (ad.type === 'pair') {
                     const mainBox = document.getElementById('main-box');
@@ -377,10 +361,17 @@
         function validateLink(c, p) {
             const cw = curSent.words[c], pw = curSent.words[p];
             const isMain = (cw.r === 'podmiot' && pw.r === 'orzeczenie') || (cw.r === 'orzeczenie' && pw.r === 'podmiot');
-            if(isMain || cw.p === p) {
-                if(!connections.find(conn => conn.c === c && conn.p === p)) {
+            
+            // FIX: Symetryczna logika - sprawdzamy czy c jest dzieckiem p LUB p jest dzieckiem c
+            let childIdx = null, parentIdx = null;
+            if (isMain) { childIdx = c; parentIdx = p; }
+            else if (cw.p === p) { childIdx = c; parentIdx = p; }
+            else if (pw.p === c) { childIdx = p; parentIdx = c; }
+
+            if (childIdx !== null) {
+                if (!connections.find(conn => conn.c === childIdx && conn.p === parentIdx)) {
                     history.push(JSON.stringify(connections));
-                    connections.push({c, p, main: isMain});
+                    connections.push({c: childIdx, p: parentIdx, main: isMain});
                     draw();
                     checkStage1();
                 }
@@ -453,22 +444,13 @@
             const isM = el.dataset.main === "true";
             if((type === 'main' && isM) || (type === 'side' && !isM)) {
                 document.getElementById(type + '-box').appendChild(el);
-                el.onpointerdown = null; // Blokada przeciągania po trafieniu
-                sorted++;
+                el.onpointerdown = null; sorted++;
                 if(sorted === connections.length) end();
             } else { err(); }
         }
 
         function end() {
-            const gifs = [
-                "https://media.tenor.com/-WsBtmSFOkAAAAAi/great-work-good-work.gif",
-                "https://media1.tenor.com/m/lQcUV4tFXqgAAAAC/achievement-success.gif",
-                "https://media1.tenor.com/m/Q97UxcFep40AAAAd/great-job-yes.gif",
-                "https://media.tenor.com/dOv8z_0THu8AAAAi/pochacco-thumbs-up.gif",
-                "https://media.tenor.com/ENaunu5infgAAAAi/cheering-well-done.gif",
-                "https://media.tenor.com/AQj2l2q3VcYAAAAj/10-10-out-of-10.gif",
-                "https://media.tenor.com/hX2VlxERAGUAAAAj/well-done-blue.gif"
-            ];
+            const gifs = ["https://media.tenor.com/-WsBtmSFOkAAAAAi/great-work-good-work.gif", "https://media1.tenor.com/m/lQcUV4tFXqgAAAAC/achievement-success.gif", "https://media1.tenor.com/m/Q97UxcFep40AAAAd/great-job-yes.gif", "https://media.tenor.com/dOv8z_0THu8AAAAi/pochacco-thumbs-up.gif", "https://media.tenor.com/ENaunu5infgAAAAi/cheering-well-done.gif", "https://media.tenor.com/AQj2l2q3VcYAAAAj/10-10-out-of-10.gif", "https://media.tenor.com/hX2VlxERAGUAAAAj/well-done-blue.gif"];
             const titles = ["GRATULACJE!", "DOBRA ROBOTA!", "WSPANIALE!", "MISTRZOSTWO!"];
             document.getElementById('end-title').innerText = titles[Math.floor(Math.random() * titles.length)];
             document.getElementById('end-gif').src = gifs[Math.floor(Math.random() * gifs.length)];
