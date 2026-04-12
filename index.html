@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rozbiór Logiczny</title>
     <link rel="icon" type="image/x-icon" href="https://img.freepik.com/darmowe-psd/blyszczacy-czerwony-symbol-serca-3d-renderowanie-blyszczacych-serc_191095-78483.jpg">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -22,6 +22,13 @@
             background-size: 100% 100%, 100px 100%, 100% 30px;
             background-attachment: fixed;
             font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+        }
+
+        .node, .pool-node, .label-pill, .pair-card {
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .canvas-area { 
@@ -36,7 +43,6 @@
         .node { 
             position: absolute; 
             z-index: 10; 
-            user-select: none;
             width: 150px;
             transform: rotate(-1deg);
         }
@@ -48,10 +54,14 @@
             transition: transform 0.2s;
             padding: 10px;
             border-radius: 2px;
+            pointer-events: none;
         }
 
         .node:nth-child(even) { transform: rotate(1.5deg); }
-        .node:hover { transform: scale(1.05) rotate(0deg); z-index: 50; }
+        
+        @media (hover: hover) {
+            .node:hover { transform: scale(1.05) rotate(0deg); z-index: 50; }
+        }
 
         .drop-zone { 
             border: 1px dashed #94a3b8; 
@@ -128,7 +138,6 @@
             letter-spacing: 1px;
         }
 
-        /* Styl Pop-upu końcowego */
         #end-popup {
             display: none;
             position: fixed;
@@ -146,7 +155,16 @@
             padding: 40px;
             text-align: center;
             box-shadow: 20px 20px 0px rgba(0,0,0,0.1);
-            max-width: 400px;
+            max-width: 90%;
+        }
+
+        .drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.8;
+            transform: scale(1.1);
+            box-shadow: 10px 10px 20px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -154,10 +172,10 @@
     <div class="max-w-6xl mx-auto">
         <header class="mb-6 flex justify-between items-end">
             <div>
-                <h1 class="text-4xl font-black text-blue-900 tracking-tighter">ROZBIÓR ZDANIA</h1>
-                <p id="instruction" class="text-blue-700 font-bold text-lg">Krok 1: Przeciągnij wyrazy na stronę i połącz je...</p>
+                <h1 class="text-2xl md:text-4xl font-black text-blue-900 tracking-tighter">ROZBIÓR ZDANIA</h1>
+                <p id="instruction" class="text-blue-700 font-bold text-sm md:text-lg">Krok 1: Przeciągnij wyrazy na stronę i połącz je...</p>
             </div>
-            <div class="bg-white px-6 py-2 border-2 border-blue-900 shadow-[4px_4px_0px_#1e3a8a] text-sm font-black">
+            <div class="bg-white px-4 md:px-6 py-2 border-2 border-blue-900 shadow-[4px_4px_0px_#1e3a8a] text-xs md:text-sm font-black">
                 BŁĘDY: <span id="error-count" class="text-red-600 text-xl">0</span>
             </div>
         </header>
@@ -168,11 +186,11 @@
 
         <div class="bg-white/80 backdrop-blur-sm shadow-2xl border border-slate-300 overflow-hidden relative rounded-sm">
             <div id="labels-drawer" class="hidden bg-blue-900 p-4 flex flex-wrap gap-3 justify-center">
-                <div class="label-pill bg-blue-500 text-white px-6 py-2 text-xs font-bold cursor-pointer" draggable="true">Podmiot</div>
-                <div class="label-pill bg-red-500 text-white px-6 py-2 text-xs font-bold cursor-pointer" draggable="true">Orzeczenie</div>
-                <div class="label-pill bg-amber-500 text-white px-6 py-2 text-xs font-bold cursor-pointer" draggable="true">Przydawka</div>
-                <div class="label-pill bg-emerald-500 text-white px-6 py-2 text-xs font-bold cursor-pointer" draggable="true">Dopełnienie</div>
-                <div class="label-pill bg-purple-500 text-white px-6 py-2 text-xs font-bold cursor-pointer" draggable="true">Okolicznik</div>
+                <div class="label-pill bg-blue-500 text-white px-6 py-2 text-xs font-bold cursor-pointer">Podmiot</div>
+                <div class="label-pill bg-red-500 text-white px-6 py-2 text-xs font-bold cursor-pointer">Orzeczenie</div>
+                <div class="label-pill bg-amber-500 text-white px-6 py-2 text-xs font-bold cursor-pointer">Przydawka</div>
+                <div class="label-pill bg-emerald-500 text-white px-6 py-2 text-xs font-bold cursor-pointer">Dopełnienie</div>
+                <div class="label-pill bg-purple-500 text-white px-6 py-2 text-xs font-bold cursor-pointer">Okolicznik</div>
             </div>
 
             <div id="game-canvas" class="canvas-area">
@@ -185,26 +203,26 @@
                 </svg>
             </div>
 
-            <div id="sorting-stage" class="hidden p-8 bg-white/50">
+            <div id="sorting-stage" class="hidden p-4 md:p-8 bg-white/50">
                 <div class="grid md:grid-cols-3 gap-8">
                     <div id="pairs-to-sort">
                         <h4 class="text-xl font-bold text-slate-500 mb-4">Relacje:</h4>
                     </div>
-                    <div id="main-box" class="sort-box p-4" ondragover="event.preventDefault()" ondrop="handleSortDrop(event, 'main')">
+                    <div id="main-box" class="sort-box p-4">
                         <h4 class="text-center font-black text-blue-700 uppercase border-b-2 border-blue-200 mb-4">Związek Główny</h4>
                     </div>
-                    <div id="side-box" class="sort-box p-4" ondragover="event.preventDefault()" ondrop="handleSortDrop(event, 'side')">
+                    <div id="side-box" class="sort-box p-4">
                         <h4 class="text-center font-black text-emerald-700 uppercase border-b-2 border-emerald-200 mb-4">Związki Poboczne</h4>
                     </div>
                 </div>
             </div>
 
-            <div id="word-pool" class="word-pool" ondragover="event.preventDefault()" ondrop="handleDropToPool(event)"></div>
+            <div id="word-pool" class="word-pool"></div>
         </div>
 
         <div class="mt-8 flex justify-between">
-            <button id="undo-btn" class="bg-white border-2 border-slate-800 px-8 py-3 font-bold text-xs hover:bg-slate-50 transition shadow-[4px_4px_0px_#000]">COFNIJ</button>
-            <button id="next-btn" class="hidden bg-blue-700 text-white px-10 py-4 font-black text-sm hover:bg-blue-800 shadow-[4px_4px_0px_#1e3a8a] transition uppercase">Dalej -></button>
+            <button id="undo-btn" class="bg-white border-2 border-slate-800 px-6 md:px-8 py-3 font-bold text-xs hover:bg-slate-50 transition shadow-[4px_4px_0px_#000]">COFNIJ</button>
+            <button id="next-btn" class="hidden bg-blue-700 text-white px-8 md:px-10 py-4 font-black text-sm hover:bg-blue-800 shadow-[4px_4px_0px_#1e3a8a] transition uppercase">Dalej -></button>
         </div>
     </div>
 
@@ -232,6 +250,7 @@
         ];
 
         let curSent, connections = [], stage = 1, errors = 0, history = [], sorted = 0;
+        let activeDrag = null;
 
         function init() {
             let hist = JSON.parse(localStorage.getItem('recentSentences') || "[]");
@@ -246,75 +265,113 @@
             const pool = document.getElementById('word-pool');
             curSent.words.forEach((w, i) => {
                 const d = document.createElement('div');
-                d.className = "pool-node"; d.innerText = w.t; d.draggable = true; d.id = `pool-${i}`;
-                d.ondragstart = (e) => e.dataTransfer.setData('text', `new:${i}`);
+                d.className = "pool-node"; d.innerText = w.t; d.id = `pool-${i}`;
+                setupUniversalDrag(d, 'pool', i);
                 pool.appendChild(d);
             });
-            document.getElementById('game-canvas').ondragover = (e) => e.preventDefault();
-            document.getElementById('game-canvas').ondrop = handleCanvasDrop;
             document.getElementById('undo-btn').onclick = undo;
         }
 
-        function handleCanvasDrop(e) {
-            const data = e.dataTransfer.getData('text');
-            if(!data.startsWith('new:')) return;
-            const idx = data.split(':')[1];
-            const rect = e.currentTarget.getBoundingClientRect();
-            createNode(idx, e.clientX - rect.left - 75, e.clientY - rect.top - 25);
-            document.getElementById(`pool-${idx}`).remove();
-        }
+        function setupUniversalDrag(el, type, id) {
+            el.onpointerdown = (e) => {
+                if (stage === 3 && type === 'canvas') return;
+                el.setPointerCapture(e.pointerId);
+                const rect = el.getBoundingClientRect();
+                activeDrag = { el, type, id, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top };
 
-        function handleDropToPool(e) {
-            const data = e.dataTransfer.getData('text');
-            if(!data.startsWith('canvas:')) return;
-            const idx = data.split(':')[1];
-            connections = connections.filter(c => c.c != idx && c.p != idx);
-            document.getElementById(`node-${idx}`).remove();
-            draw();
-            const d = document.createElement('div');
-            d.className = "pool-node"; d.innerText = curSent.words[idx].t; d.draggable = true; d.id = `pool-${idx}`;
-            d.ondragstart = (e) => e.dataTransfer.setData('text', `new:${idx}`);
-            e.currentTarget.appendChild(d);
+                if (['pool', 'label', 'pair'].includes(type)) {
+                    const ghost = el.cloneNode(true);
+                    ghost.classList.add('drag-ghost');
+                    ghost.style.width = rect.width + 'px';
+                    ghost.style.left = rect.left + 'px';
+                    ghost.style.top = rect.top + 'px';
+                    document.body.appendChild(ghost);
+                    activeDrag.ghost = ghost;
+                }
+                if (type === 'canvas') el.style.zIndex = 100;
+            };
+
+            el.onpointermove = (e) => {
+                if (!activeDrag || activeDrag.el !== el) return;
+                if (activeDrag.ghost) {
+                    activeDrag.ghost.style.left = (e.clientX - activeDrag.offsetX) + 'px';
+                    activeDrag.ghost.style.top = (e.clientY - activeDrag.offsetY) + 'px';
+                } else {
+                    const canvas = document.getElementById('game-canvas');
+                    const cr = canvas.getBoundingClientRect();
+                    el.style.left = (e.clientX - cr.left - activeDrag.offsetX) + 'px';
+                    el.style.top = (e.clientY - cr.top - activeDrag.offsetY) + 'px';
+                    draw();
+                }
+            };
+
+            el.onpointerup = (e) => {
+                if (!activeDrag || activeDrag.el !== el) return;
+                const ad = activeDrag; activeDrag = null;
+                el.releasePointerCapture(e.pointerId);
+
+                if (ad.ghost) ad.ghost.remove();
+                if (ad.type === 'canvas') el.style.zIndex = 10;
+
+                // FIX: Ukrywamy tymczasowo przeciągany element, aby elementFromPoint znalazł cel pod spodem
+                const originalPointerEvents = el.style.pointerEvents;
+                el.style.pointerEvents = 'none';
+                const targetEl = document.elementFromPoint(e.clientX, e.clientY);
+                el.style.pointerEvents = originalPointerEvents;
+
+                if (ad.type === 'pool') {
+                    const canvas = document.getElementById('game-canvas');
+                    if (targetEl && (targetEl === canvas || canvas.contains(targetEl))) {
+                        const cr = canvas.getBoundingClientRect();
+                        createNode(ad.id, e.clientX - cr.left - ad.offsetX, e.clientY - cr.top - ad.offsetY);
+                        el.remove();
+                    }
+                } 
+                else if (ad.type === 'canvas' && stage === 1) {
+                    const dropNode = targetEl?.closest('.node');
+                    if (dropNode && dropNode.id !== `node-${ad.id}`) {
+                        validateLink(parseInt(ad.id), parseInt(dropNode.id.split('-')[1]));
+                    }
+                }
+                else if (ad.type === 'label') {
+                    const dropNode = targetEl?.closest('.node');
+                    if (dropNode) handleRole(dropNode.id.split('-')[1], ad.el.innerText);
+                }
+                else if (ad.type === 'pair') {
+                    const mainBox = document.getElementById('main-box');
+                    const sideBox = document.getElementById('side-box');
+                    if (mainBox.contains(targetEl)) handleSortDrop(ad.el, 'main');
+                    else if (sideBox.contains(targetEl)) handleSortDrop(ad.el, 'side');
+                }
+            };
         }
 
         function createNode(idx, x, y) {
             const div = document.createElement('div');
             div.id = `node-${idx}`; div.className = "node"; div.style.left = x+'px'; div.style.top = y+'px';
             div.innerHTML = `<div class="node-content">
-                <div class="text-blue-900 font-bold text-center text-xl">${curSent.words[idx].t}</div>
+                <div class="text-blue-900 font-bold text-center text-lg md:text-xl">${curSent.words[idx].t}</div>
                 <div id="dz-${idx}" class="drop-zone hidden">ROLA</div>
                 <div id="rl-${idx}" class="mt-1 text-[11px] font-black uppercase text-blue-600 hidden text-center"></div>
             </div>`;
-
-            let moving = false, off = {x:0,y:0};
-            div.onmousedown = (e) => { if(e.target.closest('.drop-zone')) return; moving = true; const r = div.getBoundingClientRect(); off = {x: e.clientX-r.left, y:e.clientY-r.top}; div.style.zIndex=100; };
-            window.onmousemove = (e) => { if(!moving) return; const cr = document.getElementById('game-canvas').getBoundingClientRect(); div.style.left = (e.clientX-cr.left-off.x)+'px'; div.style.top = (e.clientY-cr.top-off.y)+'px'; draw(); };
-            window.onmouseup = () => { moving = false; div.style.zIndex=10; };
-            div.draggable = true;
-            div.ondragstart = (e) => { 
-                if(stage === 1) e.dataTransfer.setData('text', `link:${idx}`); 
-                else e.dataTransfer.setData('text', `canvas:${idx}`);
-            };
-            div.ondrop = (e) => {
-                e.preventDefault();
-                const data = e.dataTransfer.getData('text');
-                if(stage === 1 && data.startsWith('link:')) {
-                    const sIdx = parseInt(data.split(':')[1]);
-                    if(sIdx !== parseInt(idx)) validateLink(sIdx, parseInt(idx));
-                } else if(stage === 2 && data === 'role') {
-                    handleRole(idx, e.dataTransfer.getData('val'));
-                }
-            };
             document.getElementById('game-canvas').appendChild(div);
+            setupUniversalDrag(div, 'canvas', idx);
         }
 
         function validateLink(c, p) {
             const cw = curSent.words[c], pw = curSent.words[p];
             const isMain = (cw.r === 'podmiot' && pw.r === 'orzeczenie') || (cw.r === 'orzeczenie' && pw.r === 'podmiot');
-            if(isMain || cw.p === p) {
-                if(!connections.find(conn => conn.c === c && conn.p === p)) {
+            
+            // FIX: Symetryczna logika - sprawdzamy czy c jest dzieckiem p LUB p jest dzieckiem c
+            let childIdx = null, parentIdx = null;
+            if (isMain) { childIdx = c; parentIdx = p; }
+            else if (cw.p === p) { childIdx = c; parentIdx = p; }
+            else if (pw.p === c) { childIdx = p; parentIdx = c; }
+
+            if (childIdx !== null) {
+                if (!connections.find(conn => conn.c === childIdx && conn.p === parentIdx)) {
                     history.push(JSON.stringify(connections));
-                    connections.push({c, p, main: isMain});
+                    connections.push({c: childIdx, p: parentIdx, main: isMain});
                     draw();
                     checkStage1();
                 }
@@ -348,20 +405,19 @@
         }
 
         function s2() {
-            stage = 2; document.getElementById('instruction').innerText = "Krok 2: Nazwij części zdania (przeciągnij kolorowe etykiety na wyrazy).";
+            stage = 2; document.getElementById('instruction').innerText = "Krok 2: Nazwij części zdania (przeciągnij etykiety na wyrazy).";
             document.getElementById('labels-drawer').classList.remove('hidden');
             document.querySelectorAll('.drop-zone').forEach(d => d.classList.remove('hidden'));
             document.getElementById('next-btn').classList.add('hidden');
-            document.querySelectorAll('.label-pill').forEach(l => {
-                l.ondragstart = (e) => { e.dataTransfer.setData('text', 'role'); e.dataTransfer.setData('val', l.innerText); };
-            });
+            document.querySelectorAll('.label-pill').forEach(l => setupUniversalDrag(l, 'label'));
         }
 
         function handleRole(idx, val) {
             if(curSent.words[idx].r.toLowerCase() === val.toLowerCase()) {
                 document.getElementById(`rl-${idx}`).innerText = val;
                 document.getElementById(`rl-${idx}`).classList.remove('hidden');
-                document.getElementById(`dz-${idx}`).remove();
+                const dz = document.getElementById(`dz-${idx}`);
+                if (dz) dz.remove();
                 if(document.querySelectorAll('.drop-zone').length === 0) {
                     const b = document.getElementById('next-btn'); b.classList.remove('hidden'); b.innerText = "Sortowanie związków"; b.onclick = s3;
                 }
@@ -376,34 +432,26 @@
             document.getElementById('sorting-stage').classList.remove('hidden');
             const cont = document.getElementById('pairs-to-sort');
             connections.forEach((cn, i) => {
-                const d = document.createElement('div'); d.className = "pair-card p-3 mb-2 rounded shadow-sm"; d.id = `pair-${i}`; d.draggable = true;
+                const d = document.createElement('div'); d.className = "pair-card p-3 mb-2 rounded shadow-sm"; d.id = `pair-${i}`;
                 d.innerText = `${curSent.words[cn.c].t} — ${curSent.words[cn.p].t}`;
                 d.dataset.main = cn.main;
-                d.ondragstart = (e) => e.dataTransfer.setData('text', d.id);
+                setupUniversalDrag(d, 'pair', i);
                 cont.appendChild(d);
             });
         }
 
-        function handleSortDrop(e, type) {
-            const id = e.dataTransfer.getData('text'), el = document.getElementById(id), isM = el.dataset.main === "true";
+        function handleSortDrop(el, type) {
+            const isM = el.dataset.main === "true";
             if((type === 'main' && isM) || (type === 'side' && !isM)) {
-                e.currentTarget.appendChild(el); el.draggable = false; sorted++;
+                document.getElementById(type + '-box').appendChild(el);
+                el.onpointerdown = null; sorted++;
                 if(sorted === connections.length) end();
             } else { err(); }
         }
 
         function end() {
-            const gifs = [
-                "https://media.tenor.com/-WsBtmSFOkAAAAAi/great-work-good-work.gif",
-                "https://media1.tenor.com/m/lQcUV4tFXqgAAAAC/achievement-success.gif",
-                "https://media1.tenor.com/m/Q97UxcFep40AAAAd/great-job-yes.gif",
-                "https://media.tenor.com/dOv8z_0THu8AAAAi/pochacco-thumbs-up.gif",
-                "https://media.tenor.com/ENaunu5infgAAAAi/cheering-well-done.gif",
-                "https://media.tenor.com/AQj2l2q3VcYAAAAj/10-10-out-of-10.gif",
-                "https://media.tenor.com/hX2VlxERAGUAAAAj/well-done-blue.gif"
-            ];
+            const gifs = ["https://media.tenor.com/-WsBtmSFOkAAAAAi/great-work-good-work.gif", "https://media1.tenor.com/m/lQcUV4tFXqgAAAAC/achievement-success.gif", "https://media1.tenor.com/m/Q97UxcFep40AAAAd/great-job-yes.gif", "https://media.tenor.com/dOv8z_0THu8AAAAi/pochacco-thumbs-up.gif", "https://media.tenor.com/ENaunu5infgAAAAi/cheering-well-done.gif", "https://media.tenor.com/AQj2l2q3VcYAAAAj/10-10-out-of-10.gif", "https://media.tenor.com/hX2VlxERAGUAAAAj/well-done-blue.gif"];
             const titles = ["GRATULACJE!", "DOBRA ROBOTA!", "WSPANIALE!", "MISTRZOSTWO!"];
-            
             document.getElementById('end-title').innerText = titles[Math.floor(Math.random() * titles.length)];
             document.getElementById('end-gif').src = gifs[Math.floor(Math.random() * gifs.length)];
             document.getElementById('end-popup').style.display = 'flex';
