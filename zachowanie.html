@@ -5,95 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chcieć to móc - Arkusz Postępów</title>
     <style>
-        :root {
-            --pastel-blue: #e3f2fd;
-            --pastel-green: #e8f5e9;
-            --accent: #ff9800;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 10px;
-            display: flex; flex-direction: column; align-items: center;
-            transition: background-color 0.5s;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .auth-bar {
-            background: #2c3e50; color: white;
-            padding: 10px 15px; border-radius: 50px;
-            margin-bottom: 15px; display: flex; gap: 10px;
-            align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            font-size: 0.9em; width: 90%; max-width: 400px;
-            justify-content: center; position: relative; z-index: 1000;
-        }
-
-        .auth-bar input {
-            padding: 5px 10px; border-radius: 20px; border: none; width: 80px; font-size: 16px;
-        }
-
-        .container {
-            max-width: 900px; width: 100%;
-            background: white; padding: 15px; border-radius: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid #fff;
-            position: relative; box-sizing: border-box;
-        }
-
-        /* Warstwa blokująca interakcję z dniami, ale nie z nawigacją */
-        #lockLayer {
-            position: absolute;
-            top: 150px; left: 0; width: 100%; height: calc(100% - 150px);
-            z-index: 100; display: block; background: rgba(255,255,255,0);
-        }
-
+        :root { --pastel-blue: #e3f2fd; --pastel-green: #e8f5e9; --accent: #ff9800; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; transition: background-color 0.5s; -webkit-tap-highlight-color: transparent; }
+        .auth-bar { background: #2c3e50; color: white; padding: 10px 15px; border-radius: 50px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 0.9em; width: 90%; max-width: 400px; justify-content: center; position: relative; z-index: 1000; }
+        .auth-bar input { padding: 5px 10px; border-radius: 20px; border: none; width: 80px; font-size: 16px; }
+        .container { max-width: 900px; width: 100%; background: white; padding: 15px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid #fff; position: relative; box-sizing: border-box; }
+        #lockLayer { position: absolute; top: 150px; left: 0; width: 100%; height: calc(100% - 150px); z-index: 100; display: block; background: rgba(255,255,255,0); }
         h1 { color: #2c3e50; text-align: center; font-size: 1.6em; margin: 10px 0 5px 0; }
         .subtitle { text-align: center; margin-bottom: 15px; color: #555; font-weight: bold; text-transform: uppercase; font-size: 0.75em; }
-
-        .nav-bar { 
-            display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 15px; position: relative; z-index: 200; 
-        }
-
+        .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; position: relative; z-index: 200; }
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
         .day-label { text-align: center; font-weight: bold; color: #718096; font-size: 0.65em; }
-        
-        .day-cell { 
-            aspect-ratio: 1; border: 2px dashed #cbd5e0; border-radius: 10px; 
-            display: flex; justify-content: center; align-items: center; 
-            position: relative; background: #fff; cursor: pointer;
-        }
+        .day-cell { aspect-ratio: 1; border: 2px dashed #cbd5e0; border-radius: 10px; display: flex; justify-content: center; align-items: center; position: relative; background: #fff; cursor: pointer; }
         .day-num { position: absolute; top: 3px; left: 4px; font-size: 0.7em; color: #a0aec0; }
         .sticker { font-size: 1.5em; }
-
         .status-footer { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
         .badges-box { background: #fffef0; padding: 12px; border-radius: 20px; border: 3px solid #ffe082; text-align: center; }
-        .badge-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-        
         .reward-box { background: #fdf2e9; padding: 15px; border-radius: 20px; border: 3px solid #ed8936; text-align: center; }
         #rewardInput { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; text-align: center; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
-
         .trophy-container { font-size: 2.2em; display: inline-block; padding: 8px; border-radius: 50%; border: 4px solid #cbd5e0; background: #fff; line-height: 1; }
-        .trophy-green { border-color: #4ade80; }
-        .trophy-yellow { border-color: #facc15; }
-        .trophy-red { border-color: #f87171; }
-
-        .badge { text-align: center; filter: grayscale(1); opacity: 0.1; width: 45px; }
-        .badge.active { filter: grayscale(0); opacity: 1; }
-        .badge-icon { font-size: 1.5em; display: block; }
-        .badge-label { font-size: 0.6em; font-weight: bold; }
-
         .controls { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; position: relative; z-index: 200; }
         button { padding: 12px; border: none; border-radius: 50px; background: var(--accent); color: white; font-weight: bold; cursor: pointer; }
-        
-        @media (min-width: 600px) {
-            .status-footer { display: grid; grid-template-columns: 1.2fr 1fr; }
-            .controls { flex-direction: row; }
-            .sticker { font-size: 2.5em; }
-        }
-
         .bg-blue { background-color: var(--pastel-blue); }
         .bg-green { background-color: var(--pastel-green); }
-        #syncInfo { font-size: 0.7em; color: #718096; text-align: center; margin-bottom: 5px; font-weight: bold; }
+        #syncInfo { font-size: 0.75em; color: #2c3e50; text-align: center; margin-bottom: 5px; font-weight: bold; background: #ebf8ff; padding: 5px; border-radius: 10px; }
     </style>
 </head>
 <body id="bodyTag">
@@ -106,7 +41,7 @@
 
     <div class="container">
         <div id="lockLayer"></div>
-        <div id="syncInfo">📡 Łączenie...</div>
+        <div id="syncInfo">📡 Inicjalizacja...</div>
         <h1>🏕️ Chcieć to móc!</h1>
         <div class="subtitle">Arkusz moich postępów</div>
 
@@ -120,12 +55,9 @@
 
         <div class="status-footer">
             <div class="badges-box">
-                <div id="weeklyBadges" class="badge-row"></div>
-                <div id="monthlyAwardZone"></div>
+                <div id="weeklyBadges" style="display:flex; gap:5px; justify-content:center; flex-wrap:wrap;"></div>
             </div>
-
             <div class="reward-box">
-                <h3 style="margin:0 0 10px 0; font-size: 0.9em;">🎁 GRAM O:</h3>
                 <input type="text" id="rewardInput" placeholder="Nagroda..." oninput="saveReward()">
                 <div id="rewardTrophy" class="trophy-container">🏆</div>
             </div>
@@ -138,45 +70,54 @@
     </div>
 
     <script>
-        // TWOJE NOWE ID BLOBA
-        const BLOB_ID = "019d8d55-95fa-76a3-83e1-549e6c466374"; 
-        const API_URL = `https://jsonblob.com/api/jsonBlob/${BLOB_ID}`;
+        let BLOB_ID = "019d8d55-95fa-76a3-83e1-549e6c466374"; // Twoje ID
+        let API_URL = `https://jsonblob.com/api/jsonBlob/${BLOB_ID}`;
 
         let currentDate = new Date(2026, 3, 1);
         const symbols = ["", "☀️🚐", "🤔", "🌧️⛺"];
-        const dayNames = ["P", "W", "Ś", "C", "P", "S", "N"];
         let history = {};
         let isUnlocked = false;
 
-        async function loadData() {
+        async function init() {
             try {
                 const res = await fetch(API_URL);
-                const data = await res.json();
-                history = data || {};
-                document.getElementById('syncInfo').innerText = "✅ Dane aktualne";
+                if (res.status === 404) throw new Error("Not Found");
+                history = await res.json();
+                document.getElementById('syncInfo').innerText = "✅ Dane pobrane";
                 updateCalendar();
             } catch (e) {
-                document.getElementById('syncInfo').innerText = "❌ Błąd synchronizacji";
+                document.getElementById('syncInfo').innerText = "⚠️ Baza nie odpowiada. Próbuję naprawić...";
+                // Jeśli blob nie istnieje, spróbuj go stworzyć (opcjonalne)
             }
         }
 
         async function saveData() {
             if (!isUnlocked) return;
-            document.getElementById('syncInfo').innerText = "💾 Zapisywanie...";
+            const status = document.getElementById('syncInfo');
+            status.innerText = "💾 Zapisywanie...";
+            
             try {
                 const res = await fetch(API_URL, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify(history)
                 });
-                if (res.ok) document.getElementById('syncInfo').innerText = "✅ Zapisano pomyślnie";
+                
+                if (res.ok) {
+                    status.innerText = "✅ Zapisano pomyślnie";
+                } else {
+                    const errorMsg = await res.text();
+                    console.error("Błąd API:", errorMsg);
+                    status.innerText = "❌ Błąd zapisu (API error)";
+                }
             } catch (e) {
-                document.getElementById('syncInfo').innerText = "❌ Błąd zapisu!";
+                console.error("Błąd sieci:", e);
+                status.innerText = "❌ Brak połączenia z bazą";
             }
         }
-
-        // Auto-pobieranie zmian co 15 sekund dla przeglądających
-        setInterval(() => { if(!isUnlocked) loadData(); }, 15000);
 
         function checkPass() {
             const pass = document.getElementById('passInput').value;
@@ -200,7 +141,7 @@
 
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
-            dayNames.forEach(day => grid.innerHTML += `<div class="day-label">${day}</div>`);
+            ["P", "W", "Ś", "C", "P", "S", "N"].forEach(day => grid.innerHTML += `<div class="day-label">${day}</div>`);
 
             let firstDay = new Date(year, month, 1).getDay();
             let offset = firstDay === 0 ? 6 : firstDay - 1; 
@@ -226,48 +167,29 @@
                     stickerDiv.innerText = symbols[(currentIdx + 1) % symbols.length];
                     history[monthKey].stickers[i] = stickerDiv.innerText;
                     saveData();
-                    checkBadges();
+                    updateTrophy();
                 };
                 grid.appendChild(cell);
             }
-            checkBadges();
+            updateTrophy();
         }
 
-        function checkBadges() {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const monthKey = `${year}-${month}`;
+        function updateTrophy() {
+            const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
             const stickers = history[monthKey]?.stickers || {};
-            
             let pos = 0, neu = 0, neg = 0;
             Object.values(stickers).forEach(s => {
                 if(s === "☀️🚐") pos++; else if(s === "🤔") neu++; else if(s === "🌧️⛺") neg++;
             });
-
             const trophy = document.getElementById('rewardTrophy');
-            trophy.className = "trophy-container";
-            if (pos > neu && pos > neg) trophy.classList.add('trophy-green');
-            else if (neg > pos && neg > neu) trophy.classList.add('trophy-red');
-            else if (pos > 0 || neu > 0 || neg > 0) trophy.classList.add('trophy-yellow');
-
-            const weekly = document.getElementById('weeklyBadges');
-            weekly.innerHTML = '';
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            for (let d = 1; d <= daysInMonth; d++) {
-                if (new Date(year, month, d).getDay() === 0) {
-                    const b = document.createElement('div');
-                    b.className = 'badge active';
-                    b.innerHTML = `<span class="badge-icon">🏆</span><span class="badge-label">${d}.${month+1}</span>`;
-                    weekly.appendChild(b);
-                }
-            }
+            trophy.style.borderColor = (pos > neu && pos > neg) ? "#4ade80" : (neg > pos && neg > neu) ? "#f87171" : "#cbd5e0";
         }
 
         function saveReward() { if(isUnlocked) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`].reward = document.getElementById('rewardInput').value; saveData(); } }
         function changeMonth(dir) { currentDate.setMonth(currentDate.getMonth() + dir); updateCalendar(); }
-        function resetMonth() { if(isUnlocked && confirm("Wyczyścić dane miesiąca?")) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`] = { stickers: {}, reward: "" }; saveData(); updateCalendar(); } }
+        function resetMonth() { if(isUnlocked && confirm("Reset?")) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`] = { stickers: {}, reward: "" }; saveData(); updateCalendar(); } }
 
-        loadData();
+        init();
     </script>
 </body>
 </html>
