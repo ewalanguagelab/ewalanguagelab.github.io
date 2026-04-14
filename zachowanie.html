@@ -36,6 +36,8 @@
             width: 90%;
             max-width: 400px;
             justify-content: center;
+            position: relative;
+            z-index: 100; /* Zawsze na wierzchu */
         }
 
         .auth-bar input {
@@ -57,18 +59,31 @@
             box-sizing: border-box;
         }
 
+        /* Blokada obejmuje tylko kalendarz i nagrody, nie przyciski nawigacji */
         .locked-overlay {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 130px; /* Zaczyna się pod nagłówkiem i nawigacją */
+            left: 0; 
+            width: 100%; 
+            height: calc(100% - 130px);
             z-index: 10;
             cursor: not-allowed;
             display: block;
+            background: rgba(255,255,255,0.01);
         }
 
         h1 { color: #2c3e50; text-align: center; font-size: 1.6em; margin: 10px 0 5px 0; }
         .subtitle { text-align: center; margin-bottom: 15px; color: #555; font-weight: bold; text-transform: uppercase; font-size: 0.75em; }
 
-        .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 5px; }
+        .nav-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            gap: 5px; 
+            position: relative; 
+            z-index: 20; /* Nad blokadą */
+        }
         .nav-bar h2 { font-size: 1em; margin: 0; white-space: nowrap; }
 
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
@@ -95,7 +110,7 @@
         .badge-row { display: flex; gap: 8px; justify-content: center; width: 100%; flex-wrap: wrap; }
         
         .reward-box { background: #fdf2e9; padding: 15px; border-radius: 20px; border: 3px solid #ed8936; text-align: center; }
-        #rewardInput { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; text-align: center; margin-bottom: 10px; box-sizing: border-box; font-size: 16px; /* Prevent zoom on iOS */ }
+        #rewardInput { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; text-align: center; margin-bottom: 10px; box-sizing: border-box; font-size: 16px; }
 
         .trophy-container {
             font-size: 2em;
@@ -116,10 +131,9 @@
         .badge-icon { font-size: 1.5em; display: block; }
         .badge-label { font-size: 0.6em; font-weight: bold; display: block; white-space: nowrap; overflow: hidden; }
 
-        .controls { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .controls { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; position: relative; z-index: 20; }
         button { padding: 12px; border: none; border-radius: 50px; background: var(--accent); color: white; font-weight: bold; cursor: pointer; font-size: 0.9em; width: 100%; }
         
-        /* Desktop improvements */
         @media (min-width: 600px) {
             h1 { font-size: 2.2em; }
             .subtitle { font-size: 0.9em; }
@@ -144,6 +158,7 @@
         <span>🔑 Hasło:</span>
         <input type="password" id="passInput" oninput="checkPass()">
         <span id="lockStatus">🔒</span>
+        <span style="font-size: 0.7em; margin-left: 5px; opacity: 0.7;" id="syncIndicator">●</span>
     </div>
 
     <div class="container">
@@ -153,7 +168,7 @@
 
         <div class="nav-bar">
             <button onclick="changeMonth(-1)">⬅️</button>
-            <h2 id="currentMonthYear">Kwiecień 2026</h2>
+            <h2 id="currentMonthYear">Ładowanie...</h2>
             <button onclick="changeMonth(1)">➡️</button>
         </div>
 
@@ -182,12 +197,51 @@
     </div>
 
     <script>
+        // UWAGA: Każda rodzina powinna mieć swój unikalny klucz w npoint. 
+        // Domyślnie używamy hasła "rajdowiec" jako ID magazynu.
+        const BIN_ID = "045e46359be244d9f64c"; // Przykładowy publiczny bin
+        const API_URL = `https://api.npoint.io/${BIN_ID}`;
+
         let currentDate = new Date(2026, 3, 1);
         const symbols = ["", "☀️🚐", "🤔", "🌧️⛺"];
         const dayNames = ["P", "W", "Ś", "C", "P", "S", "N"];
-        const storageKey = "progressData_v5";
-        let history = JSON.parse(localStorage.getItem(storageKey)) || {};
+        let history = {};
         let isUnlocked = false;
+
+        async function loadFromServer() {
+            try {
+                const response = await fetch(API_URL);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (JSON.stringify(history) !== JSON.stringify(data)) {
+                        history = data || {};
+                        updateCalendar();
+                    }
+                    document.getElementById('syncIndicator').style.color = "#4ade80";
+                }
+            } catch (e) {
+                console.error("Błąd synchronizacji", e);
+                document.getElementById('syncIndicator').style.color = "#f87171";
+            }
+        }
+
+        async function saveToServer() {
+            if (!isUnlocked) return;
+            document.getElementById('syncIndicator').style.color = "#facc15";
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(history),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                document.getElementById('syncIndicator').style.color = "#4ade80";
+            } catch (e) {
+                document.getElementById('syncIndicator').style.color = "#f87171";
+            }
+        }
+
+        // Automatyczne odświeżanie co 10 sekund dla trybu odczytu
+        setInterval(loadFromServer, 10000);
 
         function checkPass() {
             const pass = document.getElementById('passInput').value;
@@ -238,7 +292,8 @@
                     let currentIdx = symbols.indexOf(stickerDiv.innerText);
                     stickerDiv.innerText = symbols[(currentIdx + 1) % symbols.length];
                     history[monthKey].stickers[i] = stickerDiv.innerText;
-                    saveData(); checkBadges();
+                    checkBadges();
+                    saveToServer();
                 };
                 grid.appendChild(cell);
             }
@@ -319,12 +374,28 @@
             }
         }
 
-        function saveReward() { if(isUnlocked) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`].reward = document.getElementById('rewardInput').value; saveData(); } }
-        function saveData() { localStorage.setItem(storageKey, JSON.stringify(history)); }
-        function changeMonth(dir) { currentDate.setMonth(currentDate.getMonth() + dir); updateCalendar(); }
-        function resetMonth() { if(isUnlocked && confirm("Wyczyścić?")) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`] = { stickers: {}, reward: "" }; saveData(); updateCalendar(); } }
+        function saveReward() { 
+            if(isUnlocked) { 
+                history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`].reward = document.getElementById('rewardInput').value; 
+                saveToServer(); 
+            } 
+        }
 
-        updateCalendar();
+        function changeMonth(dir) { 
+            currentDate.setMonth(currentDate.getMonth() + dir); 
+            updateCalendar(); 
+        }
+
+        function resetMonth() { 
+            if(isUnlocked && confirm("Wyczyścić?")) { 
+                history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`] = { stickers: {}, reward: "" }; 
+                saveToServer(); 
+                updateCalendar(); 
+            } 
+        }
+
+        // Pierwsze ładowanie
+        loadFromServer();
     </script>
 </body>
 </html>
