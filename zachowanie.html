@@ -37,7 +37,7 @@
             max-width: 400px;
             justify-content: center;
             position: relative;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .auth-bar input {
@@ -45,7 +45,7 @@
             border-radius: 20px;
             border: none;
             width: 80px;
-            outline: none;
+            font-size: 16px; /* Zapobiega zoomowaniu na iOS */
         }
 
         .container {
@@ -60,12 +60,12 @@
             box-sizing: border-box;
         }
 
-        .locked-overlay {
+        /* Blokada - obejmuje tylko interaktywne elementy, nie nawigację */
+        #lockLayer {
             position: absolute;
-            top: 140px; 
-            left: 0; width: 100%; height: calc(100% - 140px);
-            z-index: 10;
-            cursor: not-allowed;
+            top: 150px; /* Poniżej nagłówka i nav-bar */
+            left: 0; width: 100%; height: calc(100% - 150px);
+            z-index: 100;
             display: block;
             background: rgba(255,255,255,0);
         }
@@ -79,9 +79,9 @@
             align-items: center; 
             margin-bottom: 15px; 
             position: relative; 
-            z-index: 20; 
+            z-index: 200; /* Wyżej niż lockLayer */
         }
-        .nav-bar h2 { font-size: 1.1em; margin: 0; }
+        .nav-bar h2 { font-size: 1em; margin: 0; }
 
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
         .day-label { text-align: center; font-weight: bold; color: #718096; font-size: 0.65em; }
@@ -93,58 +93,50 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            cursor: pointer; 
             position: relative; 
             background: #fff; 
+            cursor: pointer;
         }
         .day-num { position: absolute; top: 3px; left: 4px; font-size: 0.7em; color: #a0aec0; }
         .sticker { font-size: 1.5em; }
 
         .status-footer { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
         .badges-box { background: #fffef0; padding: 12px; border-radius: 20px; border: 3px solid #ffe082; text-align: center; }
-        .badge-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
-
+        .badge-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        
         .reward-box { background: #fdf2e9; padding: 15px; border-radius: 20px; border: 3px solid #ed8936; text-align: center; }
         #rewardInput { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; text-align: center; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
 
-        /* Puchar interaktywny */
         .trophy-container {
-            font-size: 2.5em;
+            font-size: 2.2em;
             display: inline-block;
-            padding: 10px;
+            padding: 8px;
             border-radius: 50%;
-            border: 5px solid #cbd5e0;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 4px solid #cbd5e0;
+            background: #fff;
             line-height: 1;
-            margin: 5px 0;
-            background: white;
         }
-        .trophy-green { border-color: #4ade80; box-shadow: 0 0 15px rgba(74, 222, 128, 0.5); }
-        .trophy-yellow { border-color: #facc15; box-shadow: 0 0 15px rgba(250, 204, 21, 0.5); }
-        .trophy-red { border-color: #f87171; box-shadow: 0 0 15px rgba(248, 113, 113, 0.5); }
-        .trophy-enlarged { transform: scale(1.4); }
-        
-        #congratsLabel { font-weight: bold; color: #2c3e50; height: 20px; margin-top: 5px; }
+        .trophy-green { border-color: #4ade80; }
+        .trophy-yellow { border-color: #facc15; }
+        .trophy-red { border-color: #f87171; }
 
-        .badge { text-align: center; filter: grayscale(1); opacity: 0.1; width: 45px; }
+        .badge { text-align: center; filter: grayscale(1); opacity: 0.1; width: 45px; transition: 0.3s; }
         .badge.active { filter: grayscale(0); opacity: 1; }
         .badge-icon { font-size: 1.5em; display: block; }
         .badge-label { font-size: 0.6em; font-weight: bold; }
 
-        .controls { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; position: relative; z-index: 20; }
+        .controls { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; position: relative; z-index: 200; }
         button { padding: 12px; border: none; border-radius: 50px; background: var(--accent); color: white; font-weight: bold; cursor: pointer; }
         
         @media (min-width: 600px) {
             .status-footer { display: grid; grid-template-columns: 1.2fr 1fr; }
             .controls { flex-direction: row; }
             .sticker { font-size: 2.5em; }
-            .badge { width: 60px; }
-            .badge-icon { font-size: 2.2em; }
         }
 
         .bg-blue { background-color: var(--pastel-blue); }
         .bg-green { background-color: var(--pastel-green); }
-        #syncStatus { font-size: 0.7em; color: #718096; text-align: center; margin-bottom: 5px; }
+        #syncInfo { font-size: 0.7em; color: #718096; text-align: center; margin-bottom: 5px; }
     </style>
 </head>
 <body id="bodyTag">
@@ -156,8 +148,8 @@
     </div>
 
     <div class="container">
-        <div id="lockLayer" class="locked-overlay"></div>
-        <div id="syncStatus">Synchronizacja...</div>
+        <div id="lockLayer"></div>
+        <div id="syncInfo">Inicjalizacja...</div>
         <h1>🏕️ Chcieć to móc!</h1>
         <div class="subtitle">Arkusz moich postępów</div>
 
@@ -172,27 +164,25 @@
         <div class="status-footer">
             <div class="badges-box">
                 <div id="weeklyBadges" class="badge-row"></div>
-                <div id="monthlyAwardZone"></div>
+                <div id="monthlyAwardZone" style="margin-top:10px; font-size: 0.8em;"></div>
             </div>
 
             <div class="reward-box">
-                <h3 style="margin:0 0 10px 0; font-size: 0.9em;">🎁 W TYM MIESIĄCU GRAM O:</h3>
-                <input type="text" id="rewardInput" placeholder="Wpisz cel..." oninput="saveReward()">
-                <div>
-                    <div id="rewardTrophy" class="trophy-container">🏆</div>
-                    <div id="congratsLabel"></div>
-                </div>
+                <h3 style="margin:0 0 10px 0; font-size: 0.9em;">🎁 CEL MIESIĄCA:</h3>
+                <input type="text" id="rewardInput" placeholder="O co grasz?" oninput="saveReward()">
+                <div id="rewardTrophy" class="trophy-container">🏆</div>
+                <div id="congratsLabel" style="font-weight:bold; margin-top:5px;"></div>
             </div>
         </div>
 
         <div class="controls">
-            <button onclick="window.print()" style="background: #4a5568;">🖨️ Drukuj</button>
+            <button onclick="window.print()" style="background: #4a5568;">🖨️ PDF</button>
             <button onclick="resetMonth()" style="background: #cbd5e0; color: #4a5568;">Reset</button>
         </div>
     </div>
 
     <script>
-        // Baza danych JSON (npoint.io)
+        // UWAGA: Jeśli to Twoja własna baza, podmień ID poniżej.
         const BIN_ID = "fd0f47138ac12f6ff418"; 
         const API_URL = `https://api.npoint.io/${BIN_ID}`;
 
@@ -202,45 +192,46 @@
         let history = {};
         let isUnlocked = false;
 
-        async function loadData() {
+        async function loadFromServer() {
             try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error();
-                history = await response.json();
-                document.getElementById('syncStatus').innerText = "Dane zaktualizowane";
+                const res = await fetch(API_URL);
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                history = data || {};
+                document.getElementById('syncInfo').innerText = "Dane zsynchronizowane";
                 updateCalendar();
             } catch (e) {
-                document.getElementById('syncStatus').innerText = "Błąd synchronizacji";
+                document.getElementById('syncInfo').innerText = "Błąd pobierania danych";
             }
         }
 
-        async function saveData() {
+        async function saveToServer() {
             if (!isUnlocked) return;
-            document.getElementById('syncStatus').innerText = "Zapisywanie...";
+            document.getElementById('syncInfo').innerText = "Zapisywanie w chmurze...";
             try {
-                await fetch(API_URL, {
-                    method: 'POST', // npoint używa POST do aktualizacji całej treści
+                const res = await fetch(API_URL, {
+                    method: 'PUT', // Kluczowa zmiana dla npoint.io
                     body: JSON.stringify(history),
                     headers: { 'Content-Type': 'application/json' }
                 });
-                document.getElementById('syncStatus').innerText = "Zapisano pomyślnie";
+                if (res.ok) document.getElementById('syncInfo').innerText = "Zmiany zapisane u wszystkich";
             } catch (e) {
-                document.getElementById('syncStatus').innerText = "Błąd zapisu!";
+                document.getElementById('syncInfo').innerText = "Błąd zapisu!";
             }
         }
 
-        // Automatyczne odświeżanie danych co 15 sekund dla użytkowników "tylko do odczytu"
-        setInterval(() => { if(!isUnlocked) loadData(); }, 15000);
+        // Odświeżaj dane co 20 sekund dla osób w trybie odczytu
+        setInterval(() => { if(!isUnlocked) loadFromServer(); }, 20000);
 
         function checkPass() {
             const pass = document.getElementById('passInput').value;
-            const lockLayer = document.getElementById('lockLayer');
+            const lock = document.getElementById('lockLayer');
             const status = document.getElementById('lockStatus');
             if(pass.toLowerCase() === "rajdowiec") {
-                isUnlocked = true; lockLayer.style.display = "none";
+                isUnlocked = true; lock.style.display = "none";
                 status.innerText = "🔓"; status.style.color = "#4ade80";
             } else {
-                isUnlocked = false; lockLayer.style.display = "block";
+                isUnlocked = false; lock.style.display = "block";
                 status.innerText = "🔒"; status.style.color = "white";
             }
         }
@@ -280,7 +271,7 @@
                     stickerDiv.innerText = symbols[(currentIdx + 1) % symbols.length];
                     history[monthKey].stickers[i] = stickerDiv.innerText;
                     checkBadges();
-                    saveData();
+                    saveToServer();
                 };
                 grid.appendChild(cell);
             }
@@ -292,55 +283,38 @@
             const month = currentDate.getMonth();
             const monthKey = `${year}-${month}`;
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            
-            // Podliczanie statystyk miesiąca
-            let totalPos = 0, totalNeu = 0, totalNeg = 0;
             const stickers = history[monthKey]?.stickers || {};
+
+            let totalPos = 0, totalNeu = 0, totalNeg = 0;
             for (let d = 1; d <= daysInMonth; d++) {
-                let s = stickers[d];
-                if (s === "☀️🚐") totalPos++; else if (s === "🤔") totalNeu++; else if (s === "🌧️⛺") totalNeg++;
+                if (stickers[d] === "☀️🚐") totalPos++;
+                else if (stickers[d] === "🤔") totalNeu++;
+                else if (stickers[d] === "🌧️⛺") totalNeg++;
             }
 
-            // Puchar w polu nagrody
             const trophy = document.getElementById('rewardTrophy');
-            const congrats = document.getElementById('congratsLabel');
             trophy.className = "trophy-container";
-            congrats.innerText = "";
-
             if (totalPos > totalNeu && totalPos > totalNeg) trophy.classList.add('trophy-green');
             else if (totalNeg > totalPos && totalNeg > totalNeu) trophy.classList.add('trophy-red');
             else if (totalPos > 0 || totalNeu > 0 || totalNeg > 0) trophy.classList.add('trophy-yellow');
 
-            const today = new Date();
-            const isEndOfMonth = (today.getMonth() > month && today.getFullYear() >= year) || (today.getDate() === daysInMonth && today.getMonth() === month);
-            
-            if (isEndOfMonth && totalPos > totalNeu && totalPos > totalNeg) {
-                trophy.classList.add('trophy-enlarged');
-                congrats.innerText = "Gratulacje!";
-            }
-
-            // Nagłówki tygodniowe (uproszczone dla czytelności)
-            const weeklyContainer = document.getElementById('weeklyBadges');
-            weeklyContainer.innerHTML = '';
+            const weekly = document.getElementById('weeklyBadges');
+            weekly.innerHTML = '';
             for (let d = 1; d <= daysInMonth; d++) {
-                let checkDate = new Date(year, month, d);
-                if (checkDate.getDay() === 0) { // Niedziele
-                    const badge = document.createElement('div');
-                    badge.className = 'badge active';
-                    badge.innerHTML = `<span class="badge-icon">🏆</span><span class="badge-label">${d}.${month+1}</span>`;
-                    weeklyContainer.appendChild(badge);
+                if (new Date(year, month, d).getDay() === 0) {
+                    const b = document.createElement('div');
+                    b.className = 'badge active';
+                    b.innerHTML = `<span class="badge-icon">🏆</span><span class="badge-label">${d}.${month+1}</span>`;
+                    weekly.appendChild(b);
                 }
             }
-
-            const awardZone = document.getElementById('monthlyAwardZone');
-            awardZone.innerHTML = isEndOfMonth ? "<strong>Podsumowanie miesiąca gotowe!</strong>" : "<em>Zbieraj symbole, aby zdobyć puchar!</em>";
         }
 
-        function saveReward() { if(isUnlocked) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`].reward = document.getElementById('rewardInput').value; saveData(); } }
+        function saveReward() { if(isUnlocked) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`].reward = document.getElementById('rewardInput').value; saveToServer(); } }
         function changeMonth(dir) { currentDate.setMonth(currentDate.getMonth() + dir); updateCalendar(); }
-        function resetMonth() { if(isUnlocked && confirm("Wyczyścić ten miesiąc?")) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`] = { stickers: {}, reward: "" }; saveData(); updateCalendar(); } }
+        function resetMonth() { if(isUnlocked && confirm("Wyczyścić dane miesiąca?")) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`] = { stickers: {}, reward: "" }; saveToServer(); updateCalendar(); } }
 
-        loadData();
+        loadFromServer();
     </script>
 </body>
 </html>
