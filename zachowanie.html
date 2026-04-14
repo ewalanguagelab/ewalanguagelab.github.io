@@ -37,7 +37,7 @@
             max-width: 400px;
             justify-content: center;
             position: relative;
-            z-index: 100; /* Zawsze na wierzchu */
+            z-index: 100;
         }
 
         .auth-bar input {
@@ -45,6 +45,7 @@
             border-radius: 20px;
             border: none;
             width: 80px;
+            outline: none;
         }
 
         .container {
@@ -59,17 +60,14 @@
             box-sizing: border-box;
         }
 
-        /* Blokada obejmuje tylko kalendarz i nagrody, nie przyciski nawigacji */
         .locked-overlay {
             position: absolute;
-            top: 130px; /* Zaczyna się pod nagłówkiem i nawigacją */
-            left: 0; 
-            width: 100%; 
-            height: calc(100% - 130px);
+            top: 140px; 
+            left: 0; width: 100%; height: calc(100% - 140px);
             z-index: 10;
             cursor: not-allowed;
             display: block;
-            background: rgba(255,255,255,0.01);
+            background: rgba(255,255,255,0);
         }
 
         h1 { color: #2c3e50; text-align: center; font-size: 1.6em; margin: 10px 0 5px 0; }
@@ -80,76 +78,73 @@
             justify-content: space-between; 
             align-items: center; 
             margin-bottom: 15px; 
-            gap: 5px; 
             position: relative; 
-            z-index: 20; /* Nad blokadą */
+            z-index: 20; 
         }
-        .nav-bar h2 { font-size: 1em; margin: 0; white-space: nowrap; }
+        .nav-bar h2 { font-size: 1.1em; margin: 0; }
 
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
-        .day-label { text-align: center; font-weight: bold; color: #718096; font-size: 0.65em; text-transform: uppercase; }
+        .day-label { text-align: center; font-weight: bold; color: #718096; font-size: 0.65em; }
         
         .day-cell { 
             aspect-ratio: 1; 
             border: 2px dashed #cbd5e0; 
             border-radius: 10px; 
             display: flex; 
-            flex-direction: column; 
             justify-content: center; 
             align-items: center; 
             cursor: pointer; 
             position: relative; 
             background: #fff; 
         }
-        .day-num { position: absolute; top: 4px; left: 4px; font-size: 0.7em; color: #a0aec0; font-weight: bold; }
+        .day-num { position: absolute; top: 3px; left: 4px; font-size: 0.7em; color: #a0aec0; }
         .sticker { font-size: 1.5em; }
 
         .status-footer { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
-        
-        .badges-box { background: #fffef0; padding: 12px; border-radius: 20px; border: 3px solid #ffe082; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .badge-row { display: flex; gap: 8px; justify-content: center; width: 100%; flex-wrap: wrap; }
-        
-        .reward-box { background: #fdf2e9; padding: 15px; border-radius: 20px; border: 3px solid #ed8936; text-align: center; }
-        #rewardInput { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; text-align: center; margin-bottom: 10px; box-sizing: border-box; font-size: 16px; }
+        .badges-box { background: #fffef0; padding: 12px; border-radius: 20px; border: 3px solid #ffe082; text-align: center; }
+        .badge-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
 
+        .reward-box { background: #fdf2e9; padding: 15px; border-radius: 20px; border: 3px solid #ed8936; text-align: center; }
+        #rewardInput { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; text-align: center; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
+
+        /* Puchar interaktywny */
         .trophy-container {
-            font-size: 2em;
+            font-size: 2.5em;
             display: inline-block;
-            padding: 8px;
+            padding: 10px;
             border-radius: 50%;
-            border: 4px solid #cbd5e0;
+            border: 5px solid #cbd5e0;
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             line-height: 1;
+            margin: 5px 0;
+            background: white;
         }
-        .trophy-green { border-color: #4ade80; box-shadow: 0 0 10px rgba(74, 222, 128, 0.3); }
-        .trophy-yellow { border-color: #facc15; box-shadow: 0 0 10px rgba(250, 204, 21, 0.3); }
-        .trophy-red { border-color: #f87171; box-shadow: 0 0 10px rgba(248, 113, 113, 0.3); }
-        .trophy-enlarged { transform: scale(1.2); }
+        .trophy-green { border-color: #4ade80; box-shadow: 0 0 15px rgba(74, 222, 128, 0.5); }
+        .trophy-yellow { border-color: #facc15; box-shadow: 0 0 15px rgba(250, 204, 21, 0.5); }
+        .trophy-red { border-color: #f87171; box-shadow: 0 0 15px rgba(248, 113, 113, 0.5); }
+        .trophy-enlarged { transform: scale(1.4); }
+        
+        #congratsLabel { font-weight: bold; color: #2c3e50; height: 20px; margin-top: 5px; }
 
-        .badge { text-align: center; filter: grayscale(1); opacity: 0.1; transition: 0.5s; width: 45px; }
+        .badge { text-align: center; filter: grayscale(1); opacity: 0.1; width: 45px; }
         .badge.active { filter: grayscale(0); opacity: 1; }
         .badge-icon { font-size: 1.5em; display: block; }
-        .badge-label { font-size: 0.6em; font-weight: bold; display: block; white-space: nowrap; overflow: hidden; }
+        .badge-label { font-size: 0.6em; font-weight: bold; }
 
         .controls { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; position: relative; z-index: 20; }
-        button { padding: 12px; border: none; border-radius: 50px; background: var(--accent); color: white; font-weight: bold; cursor: pointer; font-size: 0.9em; width: 100%; }
+        button { padding: 12px; border: none; border-radius: 50px; background: var(--accent); color: white; font-weight: bold; cursor: pointer; }
         
         @media (min-width: 600px) {
-            h1 { font-size: 2.2em; }
-            .subtitle { font-size: 0.9em; }
-            .sticker { font-size: 2.5em; }
             .status-footer { display: grid; grid-template-columns: 1.2fr 1fr; }
             .controls { flex-direction: row; }
+            .sticker { font-size: 2.5em; }
             .badge { width: 60px; }
             .badge-icon { font-size: 2.2em; }
-            .badge-label { font-size: 0.7em; }
-            .nav-bar h2 { font-size: 1.5em; }
-            button { width: auto; }
         }
 
-        @media print { .auth-bar, .nav-bar, .controls, .locked-overlay { display: none !important; } }
         .bg-blue { background-color: var(--pastel-blue); }
         .bg-green { background-color: var(--pastel-green); }
+        #syncStatus { font-size: 0.7em; color: #718096; text-align: center; margin-bottom: 5px; }
     </style>
 </head>
 <body id="bodyTag">
@@ -158,11 +153,11 @@
         <span>🔑 Hasło:</span>
         <input type="password" id="passInput" oninput="checkPass()">
         <span id="lockStatus">🔒</span>
-        <span style="font-size: 0.7em; margin-left: 5px; opacity: 0.7;" id="syncIndicator">●</span>
     </div>
 
     <div class="container">
         <div id="lockLayer" class="locked-overlay"></div>
+        <div id="syncStatus">Synchronizacja...</div>
         <h1>🏕️ Chcieć to móc!</h1>
         <div class="subtitle">Arkusz moich postępów</div>
 
@@ -172,17 +167,17 @@
             <button onclick="changeMonth(1)">➡️</button>
         </div>
 
-        <div class="grid" id="calendarGrid"></div>
+        <div id="calendarGrid" class="grid"></div>
 
         <div class="status-footer">
             <div class="badges-box">
-                <div class="badge-row" id="weeklyBadges"></div>
-                <div class="monthly-award-zone" id="monthlyAwardZone"></div>
+                <div id="weeklyBadges" class="badge-row"></div>
+                <div id="monthlyAwardZone"></div>
             </div>
 
             <div class="reward-box">
-                <h3 style="font-size: 0.9em; margin: 0 0 10px 0;">🎁 GRAM O:</h3>
-                <input type="text" id="rewardInput" placeholder="Cel..." oninput="saveReward()">
+                <h3 style="margin:0 0 10px 0; font-size: 0.9em;">🎁 W TYM MIESIĄCU GRAM O:</h3>
+                <input type="text" id="rewardInput" placeholder="Wpisz cel..." oninput="saveReward()">
                 <div>
                     <div id="rewardTrophy" class="trophy-container">🏆</div>
                     <div id="congratsLabel"></div>
@@ -191,15 +186,14 @@
         </div>
 
         <div class="controls">
-            <button onclick="window.print()" style="background: #4a5568;">🖨️ PDF</button>
+            <button onclick="window.print()" style="background: #4a5568;">🖨️ Drukuj</button>
             <button onclick="resetMonth()" style="background: #cbd5e0; color: #4a5568;">Reset</button>
         </div>
     </div>
 
     <script>
-        // UWAGA: Każda rodzina powinna mieć swój unikalny klucz w npoint. 
-        // Domyślnie używamy hasła "rajdowiec" jako ID magazynu.
-        const BIN_ID = "045e46359be244d9f64c"; // Przykładowy publiczny bin
+        // Baza danych JSON (npoint.io)
+        const BIN_ID = "fd0f47138ac12f6ff418"; 
         const API_URL = `https://api.npoint.io/${BIN_ID}`;
 
         let currentDate = new Date(2026, 3, 1);
@@ -208,40 +202,35 @@
         let history = {};
         let isUnlocked = false;
 
-        async function loadFromServer() {
+        async function loadData() {
             try {
                 const response = await fetch(API_URL);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (JSON.stringify(history) !== JSON.stringify(data)) {
-                        history = data || {};
-                        updateCalendar();
-                    }
-                    document.getElementById('syncIndicator').style.color = "#4ade80";
-                }
+                if (!response.ok) throw new Error();
+                history = await response.json();
+                document.getElementById('syncStatus').innerText = "Dane zaktualizowane";
+                updateCalendar();
             } catch (e) {
-                console.error("Błąd synchronizacji", e);
-                document.getElementById('syncIndicator').style.color = "#f87171";
+                document.getElementById('syncStatus').innerText = "Błąd synchronizacji";
             }
         }
 
-        async function saveToServer() {
+        async function saveData() {
             if (!isUnlocked) return;
-            document.getElementById('syncIndicator').style.color = "#facc15";
+            document.getElementById('syncStatus').innerText = "Zapisywanie...";
             try {
                 await fetch(API_URL, {
-                    method: 'POST',
+                    method: 'POST', // npoint używa POST do aktualizacji całej treści
                     body: JSON.stringify(history),
                     headers: { 'Content-Type': 'application/json' }
                 });
-                document.getElementById('syncIndicator').style.color = "#4ade80";
+                document.getElementById('syncStatus').innerText = "Zapisano pomyślnie";
             } catch (e) {
-                document.getElementById('syncIndicator').style.color = "#f87171";
+                document.getElementById('syncStatus').innerText = "Błąd zapisu!";
             }
         }
 
-        // Automatyczne odświeżanie co 10 sekund dla trybu odczytu
-        setInterval(loadFromServer, 10000);
+        // Automatyczne odświeżanie danych co 15 sekund dla użytkowników "tylko do odczytu"
+        setInterval(() => { if(!isUnlocked) loadData(); }, 15000);
 
         function checkPass() {
             const pass = document.getElementById('passInput').value;
@@ -265,14 +254,11 @@
 
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
-            dayNames.forEach(day => {
-                const label = document.createElement('div');
-                label.className = 'day-label'; label.innerText = day; grid.appendChild(label);
-            });
+            dayNames.forEach(day => grid.innerHTML += `<div class="day-label">${day}</div>`);
 
             let firstDay = new Date(year, month, 1).getDay();
             let offset = firstDay === 0 ? 6 : firstDay - 1; 
-            for (let i = 0; i < offset; i++) grid.appendChild(document.createElement('div')).className = 'day-cell-empty';
+            for (let i = 0; i < offset; i++) grid.innerHTML += `<div></div>`;
 
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             let monthKey = `${year}-${month}`;
@@ -287,13 +273,14 @@
                 stickerDiv.className = 'sticker';
                 stickerDiv.innerText = history[monthKey].stickers[i] || "";
                 cell.appendChild(stickerDiv);
+                
                 cell.onclick = () => {
                     if(!isUnlocked) return;
                     let currentIdx = symbols.indexOf(stickerDiv.innerText);
                     stickerDiv.innerText = symbols[(currentIdx + 1) % symbols.length];
                     history[monthKey].stickers[i] = stickerDiv.innerText;
                     checkBadges();
-                    saveToServer();
+                    saveData();
                 };
                 grid.appendChild(cell);
             }
@@ -305,97 +292,55 @@
             const month = currentDate.getMonth();
             const monthKey = `${year}-${month}`;
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const weeklyContainer = document.getElementById('weeklyBadges');
-            weeklyContainer.innerHTML = '';
-
-            for (let d = 1; d <= daysInMonth; d++) {
-                let checkDate = new Date(year, month, d);
-                if (checkDate.getDay() === 0) {
-                    let posW = 0, neuW = 0, negW = 0;
-                    let sundayHasSticker = false;
-                    for (let i = 0; i < 7; i++) {
-                        let targetDate = new Date(year, month, d - i);
-                        let ty = targetDate.getFullYear(), tm = targetDate.getMonth(), td = targetDate.getDate();
-                        if (ty === 2026 && tm === 3 && td < 13) continue;
-                        let tKey = `${ty}-${tm}`;
-                        let s = (history[tKey] && history[tKey].stickers) ? history[tKey].stickers[td] : "";
-                        if (i === 0 && s && s !== "") sundayHasSticker = true;
-                        if (s === "☀️🚐") posW++; else if (s === "🤔") neuW++; else if (s === "🌧️⛺") negW++;
-                    }
-                    const badge = document.createElement('div');
-                    let light = "⚪", active = false;
-                    if (sundayHasSticker) {
-                        if (posW > neuW && posW > negW) light = "🟢"; else if (negW > posW && negW > neuW) light = "🔴"; else light = "🟡";
-                        active = true;
-                    }
-                    badge.className = `badge ${active ? 'active' : ''}`;
-                    badge.innerHTML = `<span class="badge-icon">${light}</span><span class="badge-label">${d}.${month+1}</span>`;
-                    weeklyContainer.appendChild(badge);
-                }
-            }
-
+            
+            // Podliczanie statystyk miesiąca
             let totalPos = 0, totalNeu = 0, totalNeg = 0;
-            const stickers = history[monthKey].stickers || {};
+            const stickers = history[monthKey]?.stickers || {};
             for (let d = 1; d <= daysInMonth; d++) {
-                if (year === 2026 && month === 3 && d < 13) continue;
                 let s = stickers[d];
                 if (s === "☀️🚐") totalPos++; else if (s === "🤔") totalNeu++; else if (s === "🌧️⛺") totalNeg++;
             }
 
-            const awardZone = document.getElementById('monthlyAwardZone');
+            // Puchar w polu nagrody
             const trophy = document.getElementById('rewardTrophy');
             const congrats = document.getElementById('congratsLabel');
-            const today = new Date();
-            const isLastDayOfMonth = (today.getDate() === daysInMonth && today.getMonth() === month && today.getFullYear() === year) || (new Date(year, month, daysInMonth) < today);
-
             trophy.className = "trophy-container";
-            congrats.innerHTML = "";
+            congrats.innerText = "";
+
             if (totalPos > totalNeu && totalPos > totalNeg) trophy.classList.add('trophy-green');
             else if (totalNeg > totalPos && totalNeg > totalNeu) trophy.classList.add('trophy-red');
             else if (totalPos > 0 || totalNeu > 0 || totalNeg > 0) trophy.classList.add('trophy-yellow');
 
-            if (isLastDayOfMonth && totalPos > totalNeu && totalPos > totalNeg) {
+            const today = new Date();
+            const isEndOfMonth = (today.getMonth() > month && today.getFullYear() >= year) || (today.getDate() === daysInMonth && today.getMonth() === month);
+            
+            if (isEndOfMonth && totalPos > totalNeu && totalPos > totalNeg) {
                 trophy.classList.add('trophy-enlarged');
-                congrats.innerHTML = '<span class="congrats-text" style="color:#4ade80">Gratulacje!</span>';
+                congrats.innerText = "Gratulacje!";
             }
 
-            if (!isLastDayOfMonth) {
-                let icon = "🚦⚪🏆", msg = "Zatrzymaj się i pomyśl.";
-                if (totalPos > totalNeu && totalPos > totalNeg) { icon = "🚦🟢🏆"; msg = "Dobra droga!"; }
-                else if (totalNeg > totalPos && totalNeg > totalNeu) { icon = "🚦🔴🏆"; msg = "Pomyśl - zmień to."; }
-                else if (totalPos > 0 || totalNeu > 0 || totalNeg > 0) { icon = "🚦🟡🏆"; msg = "Jutro będzie lepiej."; }
-                awardZone.innerHTML = `<div style="font-size:2em">${icon}</div><div class="traffic-light-msg" style="font-size:0.75em">${msg}</div>`;
-            } else {
-                let icon = "🔧", msg = "Usterka!", label = "NAPRAWA";
-                if (totalPos > totalNeu && totalPos > totalNeg) { icon = "🏆"; msg = "Świetnie!"; label = "MISTRZ"; }
-                else if (totalNeg > totalPos && totalNeg > totalNeu) { icon = "🔧"; msg = "Usterka!"; label = "NAPRAWA"; }
-                else { icon = "💪"; msg = "Działamy!"; label = "TRENING"; }
-                awardZone.innerHTML = `<div class="badge active"><span class="badge-icon">${icon}</span><span class="badge-label">${label}</span></div><div class="final-msg" style="font-size:0.8em">${msg}</div>`;
+            // Nagłówki tygodniowe (uproszczone dla czytelności)
+            const weeklyContainer = document.getElementById('weeklyBadges');
+            weeklyContainer.innerHTML = '';
+            for (let d = 1; d <= daysInMonth; d++) {
+                let checkDate = new Date(year, month, d);
+                if (checkDate.getDay() === 0) { // Niedziele
+                    const badge = document.createElement('div');
+                    badge.className = 'badge active';
+                    badge.innerHTML = `<span class="badge-icon">🏆</span><span class="badge-label">${d}.${month+1}</span>`;
+                    weeklyContainer.appendChild(badge);
+                }
             }
+
+            const awardZone = document.getElementById('monthlyAwardZone');
+            awardZone.innerHTML = isEndOfMonth ? "<strong>Podsumowanie miesiąca gotowe!</strong>" : "<em>Zbieraj symbole, aby zdobyć puchar!</em>";
         }
 
-        function saveReward() { 
-            if(isUnlocked) { 
-                history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`].reward = document.getElementById('rewardInput').value; 
-                saveToServer(); 
-            } 
-        }
+        function saveReward() { if(isUnlocked) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`].reward = document.getElementById('rewardInput').value; saveData(); } }
+        function changeMonth(dir) { currentDate.setMonth(currentDate.getMonth() + dir); updateCalendar(); }
+        function resetMonth() { if(isUnlocked && confirm("Wyczyścić ten miesiąc?")) { history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`] = { stickers: {}, reward: "" }; saveData(); updateCalendar(); } }
 
-        function changeMonth(dir) { 
-            currentDate.setMonth(currentDate.getMonth() + dir); 
-            updateCalendar(); 
-        }
-
-        function resetMonth() { 
-            if(isUnlocked && confirm("Wyczyścić?")) { 
-                history[`${currentDate.getFullYear()}-${currentDate.getMonth()}`] = { stickers: {}, reward: "" }; 
-                saveToServer(); 
-                updateCalendar(); 
-            } 
-        }
-
-        // Pierwsze ładowanie
-        loadFromServer();
+        loadData();
     </script>
 </body>
 </html>
